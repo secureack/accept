@@ -1,0 +1,52 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Accept",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/",
+            "program": "run.py",
+            "args": [
+                "accept",
+                "--debug",
+                "--log_level", "INFO",
+                "--config", "config.d/beats/filebeat.yaml",
+                "--pipeline", "beats"
+            ]
+        },
+        {
+            "name": "Process",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/",
+            "program": "run.py",
+            "args": [
+                "process",
+                "--log_level", "DEBUG",
+                "--config", "config.d/new.yaml",
+                "--cache", "3c0cf9a6-a41f-451e-8c24-acba47576a9c.filebeat.beats.cache"
+            ]
+        },
+        {
+            "name": "Processor Test",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/",
+            "program": "run.py",
+            "args": [
+                "processor",
+                "--log_level", "DEBUG",
+                "--config", "config.d/new.yaml",
+                "--id", "loadJson",
+                "--event", "{ \"message\" : \"Hello World\" }"
+            ]
+        }
+    ]
+}

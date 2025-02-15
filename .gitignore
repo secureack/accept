@@ -1,0 +1,19 @@
+# Python
+*.pyc
+__pycache__
+__pycache__/
+.vs
+.venv/Scripts/
+.venv/pyvenv.cfg
+.venv/pyvenv.cfg
+venv/
+.venv/
+
+# Docker
+.docker
+.dockerignore
+
+temp
+data
+cache
+config.d

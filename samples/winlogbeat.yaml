@@ -1,0 +1,47 @@
+input:
+  id: beats
+  name: beats
+  plugin: beats
+  bindPort: 3001
+  bindAddress: 0.0.0.0
+  flush_interval: 10
+  flush_every: 15000
+  next: ["load"]
+
+processor:
+  id: "load"
+  plugin: loadJson
+  next: ["agent"]
+
+processor:
+  id: "agent"
+  plugin: rename
+  rename: { "host.os.type" : "os", "host.os.version" : "os_version", "host.os.name" : "os_name", "host.architecture" : "os_architecture", "agent.version" : "agent_version", "agent.id" : "agent_id", "agent.type" : "agent_type", "host.ip" : "ip_list", "host.mac" : "mac_list" , "host.hostname" : "host"}
+  next: ["agent.lower"]
+
+processor:
+  id: "agent.lower"
+  plugin: lowercase
+  fields: ["host"]
+  next: ["inject"]
+
+processor:
+  id: inject
+  plugin: inject
+  inject: {"pipeline":"winlogbeat","log_server":"accept-1"}
+  next: ["blacklist"]
+
+processor:
+  id: blacklist
+  plugin: blacklist
+  blacklist: ["log","input.*","host.*","@metadata.*","winlog.*","event.*","agent.*","system.*","message"]
+  next: ["investigate"]
+
+output:
+  id: investigate
+  name: investigate
+  plugin: investigate
+  index: <index>
+  password: <password>
+  url: https://<url>:9200
+  username: <username>

@@ -1,0 +1,98 @@
+import uuid
+import os
+import time
+from pathlib import Path
+import threading
+
+from core import globalSettings, globalLogger
+from accept import queue
+from process import postRegister
+from classes import base
+
+class input(base.base):
+    next = None
+
+    def __init__(self,name=None,**kwargs):
+        self.id = kwargs.get("id")
+        self.name = name
+        self.running = False
+        self.logger = globalLogger.getLogger(__name__,kwargs.get("log_level",globalSettings.args.log_level))
+        self.flushInterval = kwargs.get("flush_interval",60)
+        self.flushEvery = kwargs.get("flush_every",1000000)
+        super().__init__(**kwargs)
+
+    def start(self):
+        self.running = True
+        self.rotateCache()
+        self.lock = threading.Lock()
+        threading.Thread(target=self.cacheRotator, args=()).start()
+        self.logger.debug(f"{self} started")
+
+    def stop(self):
+        self.running = False
+        self.rotateCache(createNew=False)
+        self.logger.debug(f"{self} stopped")
+
+    def cacheRotator(self):
+        self.logger.debug(f"{self} started cache rotator")
+        while self.running:
+            time.sleep(self.flushInterval)
+            with self.lock:
+                if time.time() - self.cacheWriter["createdTime"] >= self.flushInterval:
+                    self.rotateCache()
+
+    def rotateCache(self,createNew=True):
+        self.logger.debug(f"{self} rotating cache")
+        try:
+            if self.cacheWriter["file"]:
+                self.cacheWriter["file"].close()
+                self.cacheWriter["file"] = None
+                os.rename(self.cacheWriter["filePath"],f"{self.cacheWriter['filePath'][:-len('.build')]}.cache")
+                if self.cacheWriter["totalEvents"] == 0:
+                    os.remove(f"{self.cacheWriter['filePath'][:-len('.build')]}.cache")
+                else:
+                    self.logger.debug(f"{self} starting cache processing for {self.cacheWriter['filePath'][:-len('.build')]}.cache with {self.cacheWriter['totalEvents']} events")
+                    queue.register(f"{self.cacheWriter['filePath'][:-len('.build')]}.cache".split("/")[-1])
+        except AttributeError:
+            pass
+        except Exception as e:
+            self.logger.error(f"{self} exception {e}")
+        filePath = str(Path(f"{globalSettings.args.cache_dir}/{uuid.uuid4()}.{globalSettings.args.pipeline}.{self.name}.build"))
+        self.cacheWriter = {
+            "createdTime" : time.time(),
+            "filePath" : filePath,
+            "file" : open(filePath,"wb") if createNew else None,
+            "firstEvent" : 0,
+            "lastEvent" : 0,
+            "totalEvents" : 0
+        }
+
+    def process(self):
+        startTime = time.perf_counter()
+        self.logger.info(f"Started cache processing",{ "cache" : globalSettings.args.cache })
+        cacheFile = os.path.join(globalSettings.args.cache_dir, globalSettings.args.cache)
+        if os.path.exists(cacheFile): 
+            with open(cacheFile) as f:
+                for event in f:
+                    eventStartTime = time.perf_counter_ns()
+                    for next in self.next if self.next else []:
+                        next.processHandler(event.strip())
+                    self.updateProcessStats(eventStartTime)
+            for item in postRegister.items:
+                item()
+            os.remove(cacheFile)
+        else:
+            self.logger.error(f"Cache file does not exist",{ "cache" : globalSettings.args.cache })
+        self.logger.info(f"Finished cache processing",{ "cache" : globalSettings.args.cache, "took" : time.perf_counter() - startTime })
+
+    def event(self,event):
+        event = event.strip()
+        with self.lock:
+            if event:
+                self.cacheWriter["file"].write(f"{event}\n".encode())
+                if self.cacheWriter["totalEvents"] == 0:
+                    self.cacheWriter["firstEvent"] = time.time()
+                elif self.flushEvery > 0 and self.cacheWriter["totalEvents"] > self.flushEvery:
+                    self.rotateCache()
+                self.cacheWriter["totalEvents"] += 1
+                self.cacheWriter["lastEvent"] = time.time()
