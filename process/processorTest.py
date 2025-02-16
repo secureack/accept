@@ -11,6 +11,9 @@ def test():
             event = file.read()
     if globalSettings.args.event_json:
         event = json.loads(event)
-    print(f"LOADED EVENT | event({type(event).__name__}) | {event}")
     event = objectClass.process(event)
-    print(f"PROCESSED EVENT | event({type(event).__name__}) | {event}")
+    print(f"Event type: {type(event).__name__}")
+    if type(event) is dict:
+        print(f"Event: {json.dumps(event)}")
+    else:
+        print(f"Event: {event}")

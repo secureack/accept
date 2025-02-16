@@ -28,7 +28,7 @@ def typeCast(varString:str,dicts:dict=None,functionSafeList:dict=functions.avail
 
 def simple(varString:str):
     if type(varString) == str and varString:
-        if varString[0] == "\"" and varString[-1] == "\"":
+        if (varString[0] == "\"" and varString[-1] == "\"") or (varString[0] == "'" and varString[-1] == "'"):
             return str(varString[1:-1])
         # Int
         if regexInt.match(varString):
