@@ -21,13 +21,11 @@ class udp(input.input):
         except Exception as e:
             self.logger.critical(f"critical error {e}")
             os._exit(255)
-        self.server.listen(5)
-        self.sock = self.server
 
         while self.running:
             data = ""
             try:
-                data, address = self.sock.recvfrom(4096)
+                data, address = self.server.recvfrom(4096)
                 if "\n" in data:
                     for e in data.split("\n")[:-1]:
                         self.event(e)
