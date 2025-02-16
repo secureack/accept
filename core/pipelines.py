@@ -20,7 +20,11 @@ def load(pipeline):
         while len(processList) > 0:
             processItem = processList.pop()
             currentClass = processItem[0]
-            nextItem = pipeline[processItem[1]]
+            try:
+                nextItem = pipeline[processItem[1]]
+            except KeyError:
+                globalLogger.logger.error(f"pipeline item {processItem[1]} not found")
+                continue
             try:
                 nextClass = objectCache[nextItem["id"]]
             except KeyError:
