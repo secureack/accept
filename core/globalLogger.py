@@ -4,6 +4,8 @@ import time
 import json
 from traceback import format_exception
 
+from core import globalSettings
+
 class _logger(logging.Handler):
 
     def __init__(self):
@@ -23,6 +25,8 @@ class _logger(logging.Handler):
             },
             "props" :  record.args if type(record.args) is dict else {},
             "context" : {
+                "pipeline" : getattr(globalSettings.args,"pipeline","None"),
+                "cache" : getattr(globalSettings.args,"cache","None")
             }
         }
         if record.exc_info:
@@ -32,10 +36,10 @@ class _logger(logging.Handler):
 logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s[%(process)d] %(filename)s:%(lineno)d | %(message)s")
 logger = logging.getLogger(__name__)
 logger.propagate = False
-logger.setLevel("DEBUG")
+logger.setLevel(5)
 logger.addHandler(_logger())
 
-def getLogger(name,level="DEBUG"):
+def getLogger(name,level=5):
     newLogger = logging.getLogger(name)
     newLogger.propagate = False
     newLogger.setLevel(level)
@@ -45,6 +49,7 @@ def getLogger(name,level="DEBUG"):
 def unhandledExceptionHook(*exc_info):
     global logger
     message = ''.join(format_exception(*exc_info)).replace("\n","\\n")
-    logger.critical(f"Uncaught Exception",{ "exception" : message },extra={ "source" : "exception", "type" : "exception" })
+    logger.log(10,f"Critical Uncaught Exception",{ "exception" : message },extra={ "source" : "exception", "type" : "exception" })
 
 sys.excepthook = unhandledExceptionHook
+

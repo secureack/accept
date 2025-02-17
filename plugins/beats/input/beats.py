@@ -69,7 +69,7 @@ class beats(input.input):
         try:
             self.server.bind((self.bindAddress, self.bindPort))
         except Exception as e:
-            self.logger.critical(f"critical error {e}")
+            self.logger.log(1,f"Critical Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
             os._exit(255)
         self.server.listen(5)
         self.sock = self.server
@@ -89,8 +89,7 @@ class beats(input.input):
                 self.currentConnections += 1
                 threading.Thread(target=self.accept, args=(client,address)).start()
             except Exception as e:
-                self.logger.error(f"connection exception occurred {e}")
-
+                self.logger.log(1,f"Connection Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
     def stop(self):
         if self.server:
             if self.ssl:
@@ -110,11 +109,11 @@ class beats(input.input):
                 break
             buffer += tempBuffer
         if len(buffer) < bufferLength:
-            self.logger.warning(f"received data buffer is smaller than expected {len(buffer)} {bufferLength}")
+            self.logger.log(4,f"Unexpected buffer size",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "error" })
         return buffer
 
     def accept(self,client,address):
-        self.logger.info(f"new beats connection: {address}")
+        self.logger.log(1,f"New beats connection",{ "name" : self.name, "id" : self.id, "src_ip" : address },extra={ "source" : "beats", "type" : "connect" })
         try:
             nextAck = 0
             windowSize = 0
@@ -123,10 +122,8 @@ class beats(input.input):
                 while byteReader != None:
                     version =  byteReader.recv(1).decode()
                     if not version or not version == "2":
-                        self.logger.debug(f"invalid frame version={version}")
                         raise Exception("invalid frame version")
                     atype = byteReader.recv(1).decode()
-                    self.logger.debug(f"version={version} type={atype}")
                     if atype == "D":
                         sequenceNumber = int.from_bytes(byteReader.recv(4),"big")
                         pairCount = int.from_bytes(byteReader.recv(4),"big")
@@ -138,7 +135,6 @@ class beats(input.input):
                             value = self.recv(byteReader,valueLength).decode()
                             event[key] = value
                         self.event(event)
-                        self.logger.debug(f"sequenceNumber={sequenceNumber} nextAck={nextAck} pairCount={pairCount}")
                         nextAck -= 1
                     elif atype == "J":
                         # Json payload
@@ -146,18 +142,15 @@ class beats(input.input):
                         documentLength = int.from_bytes(byteReader.recv(4),"big")
                         document = self.recv(byteReader,documentLength).decode()
                         self.event(document)
-                        self.logger.debug(f"sequenceNumber={sequenceNumber} nextAck={nextAck} documentLength={documentLength}")
                         nextAck -= 1
                     elif atype == "A":
                         # Act
                         sequenceNumber = byteReader.recv(4)
-                        self.logger.debug(f"sequenceNumber={sequenceNumber} nextAck={nextAck}")
                         nextAck -= 1
                     elif atype == "W":
                         # Window size before ack is required
                         windowSize = int.from_bytes(byteReader.recv(4),"big")
                         nextAck = windowSize
-                        self.logger.debug(f"windowSize={windowSize}")
                     elif atype == "C":
                         # Compressed payload
                         compressedPayloadLength = int.from_bytes(byteReader.recv(4),"big")
@@ -169,7 +162,6 @@ class beats(input.input):
                         byteReaderEOF = byteReader.tell()
                         byteReader.seek(0)
                         setattr(byteReader,"recv",byteReader.read)
-                        self.logger.debug(f"starting reading compressed payload compressedPayloadLength={compressedPayloadLength}")
                     if nextAck == 0:
                         # Ack
                         ackMessage = bytearray()
@@ -178,13 +170,11 @@ class beats(input.input):
                         ackMessage += sequenceNumber.to_bytes(4,"big")
                         client.send(ackMessage)
                         nextAck = windowSize
-                        self.logger.debug(f"ack {sequenceNumber}")
                     if type(byteReader) is io.BytesIO and byteReader.tell() >= byteReaderEOF:
-                        self.logger.debug(f"finished reading compressed payload")
                         byteReader.close()
                         byteReader = None
         except Exception as e:
-            self.logger.error(f"lumberjack protocol error: {e}")
+            self.logger.log(1,f"Lumberjack Protocol Exception",{ "name" : self.name, "id" : self.id, "src_ip" : address },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
         finally:
             client.close()
             self.currentConnections -= 1

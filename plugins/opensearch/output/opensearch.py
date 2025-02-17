@@ -53,16 +53,14 @@ class opensearch(output.output):
         return result
 
     def flush(self):
-        self.logger.debug(f"starting opensearch buffer flush: {int(len(self.buffer))}")
         failedEvents = []
         if len(self.buffer) > 0:
             events = self.buildEvents(self.buffer)
             resultCode, resultMessage, eventErrors = self.flushOpenSearch(events)
-            self.logger.debug(f"opensearch bulk response - result_code={resultCode} result_message={resultMessage}  event_errors={len(eventErrors)}")
             # Event errors occurred
             if resultCode == 1:
                 for eventError in eventErrors:
-                    self.logger.error(f"reject by opensearch: {eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}")
+                    self.logger.log(3,"Reject By opensearch",{ "reason" : f"{eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}" } )
                     failedEvents.append(json.dumps({ "@timestamp" : datetime.datetime.now().isoformat(), "message" : self.buffer[eventError[0]], "error_type" : eventError[1]['index']['error']['type'], "error_reason" : eventError[1]['index']['error']['reason'] }))
             elif resultCode == 2:
                 sys.exit(2)
@@ -73,7 +71,6 @@ class opensearch(output.output):
             elif resultCode == 4 or resultCode == 5:
                 if resultCode == 5:
                     time.sleep(10)
-                self.logger.warning(f"unable to flush opensearch buffer as it was too large, attempting to recover")
                 buffer_chunks = [self.buffer[i::4] for i in range(4)]
                 for chunk in buffer_chunks:
                     events = self.buildEvents(chunk)
@@ -82,14 +79,11 @@ class opensearch(output.output):
                         sys.exit(10)
                     elif resultCode == 1:
                         for eventError in eventErrors:
-                            self.logger.error(f"reject by opensearch: {eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}")
+                            self.logger.log(3,"Reject By opensearch",{ "reason" : f"{eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}" } )
                             failedEvents.append(json.dumps({ "@timestamp" : datetime.datetime.now().isoformat(), "message" : chunk[eventError[0]], "error_type" : eventError[1]['index']['error']['type'], "error_reason" : eventError[1]['index']['error']['reason'] }))
         if len(failedEvents) > 0:
             events = self.buildEvents(failedEvents)
             resultCode, resultMessage, eventErrors = self.flushOpenSearch(events)
-            if not resultCode == 0:
-                self.logger.debug(f"opensearch failed to accept failed events - result_code={resultCode} result_message={resultMessage}  event_errors={len(eventErrors)}")
-        self.logger.debug(f"finished opensearch buffer flush: {int(len(self.buffer))}")
 
     def flushOpenSearch(self,bulkPayload):
         resultCode = 999

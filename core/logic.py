@@ -34,7 +34,7 @@ def ifEval(logicString,dicts=None):
             result = eval(tempLogic) # Can be an unsafe call be very careful with this!
             return result
         else:
-            logger.error("LogicEval tempLogic contains unsafe items {}".format({ "tempLogic" : tempLogic }))
+            logger.log(2,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
 
 def compileIf(logicString):
@@ -67,7 +67,7 @@ def compliedEval(logicString,statements,dicts=None):
             result = eval(tempLogic) # Can be an unsafe call be very careful with this!
             return result
         else:
-            logger.error("LogicEval tempLogic contains unsafe items {}".format({ "tempLogic" : tempLogic }))
+            logger.log(2,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
 
 def logicProcess(statement):
@@ -101,5 +101,4 @@ def logicProcess(statement):
         else:
             return False
     except:
-        logger.warning("Logic processing failed {}".format({ "statement" : statement }))
         return False
