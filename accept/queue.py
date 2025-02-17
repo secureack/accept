@@ -17,7 +17,7 @@ def limitVirtualMemory():
     resource.setrlimit(resource.RLIMIT_AS, (globalSettings.args.flush_thread_max_memory, resource.RLIM_INFINITY))
 
 if globalSettings.args.debug:
-    WORKER_START_CMDLINE = WORKER_START_CMDLINE.replace("python3","python3 -Xfrozen_modules=off")
+    WORKER_START_CMDLINE = WORKER_START_CMDLINE.replace(sys.executable, f"{sys.executable} -Xfrozen_modules=off")
 
 class Process:
     pid:int
@@ -51,7 +51,7 @@ def remainingCapacity(includeWaiting=True) -> int:
 def register(cache:str):
     if cache not in taskPool.waiting and not any([ x.cache == cache for x in taskPool.running ]):
         taskPool.waiting.add(cache)
-    globalLogger.logger.info("Task Registered",{ "cache" : cache, })
+    globalLogger.logger.log(6,"Task Registered",{ "cache" : cache },extra={ "source" : "queue", "type" : "register" })
 
 def kill(cache: str):
     for task in taskPool.waiting:
@@ -71,7 +71,7 @@ def process():
             cache = taskPool.waiting.pop()
             process = Process(cache)
             taskPool.running.append(process)
-            globalLogger.logger.info("Worker Started",{ "cache" : cache, "pid" : process.pid })
+            globalLogger.logger.log(6,"Worker Started",{ "cache" : cache, "pid" : process.pid },extra={ "source" : "queue", "type" : "start" })
     except IndexError:
         pass
 
@@ -81,11 +81,11 @@ def process():
             sys.stdout.write(line.decode("utf-8"))
         if running and time.time() - process.startTime > ( process.startTime + globalSettings.args.flush_timeout ):
             process.process.terminate()
-            globalLogger.logger.warning("Worker Killed",{ "cache" : process.cache, "pid" : process.process.pid })
+            globalLogger.logger.log(4,"Worker Killed",{ "cache" : process.cache, "pid" : process.process.pid },extra={ "source" : "queue", "type" : "killed" })
         if not running:
             for line in iter(process.process.stdout.readline, b''):
                 sys.stdout.write(line.decode("utf-8"))
             sys.stdout.flush()
-            globalLogger.logger.info("Worker Ended",{ "cache" : process.cache, "pid" : process.process.pid })
+            globalLogger.logger.log(6,"Worker Ended",{ "cache" : process.cache, "pid" : process.process.pid },extra={ "source" : "queue", "type" : "end" })
             taskPool.running.remove(process)
             break

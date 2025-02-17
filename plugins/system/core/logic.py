@@ -404,9 +404,9 @@ def typeCast(varString:str,dicts:dict=None,functionSafeList:dict=functions.avail
                 try:
                     return functionSafeList[functionName](*functionArgs,**functionKwargs)
                 except Exception as e:
-                    logger.error(f"Function exception {e}")
+                    logger.log(3,f"Function Exception",extra={ "source" : "function", "type" : "exception" },exc_info=True)
             else:
-                logger.warning("Function is not a valid function {}".format({ "function_name" : functionName }))
+                logger.log(4,f"Function not found",{ "function_name" : functionName },extra={ "source" : "function", "type" : "exception" })
     # Default to exsiting
     return varString
 
@@ -430,7 +430,7 @@ def ifEval(logicString,dicts=None):
             result = eval(tempLogic) # Can be an unsafe call be very careful with this!
             return result
         else:
-            logger.error("LogicEval tempLogic contains unsafe items {}".format({ "tempLogic" : tempLogic }))
+            logger.log(2,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
 
 def complieIf(logicString):
@@ -461,7 +461,7 @@ def compliedEval(logicString,statements,dicts=None):
             result = eval(tempLogic) # Can be an unsafe call be very careful with this!
             return result
         else:
-            logger.error("LogicEval tempLogic contains unsafe items {}".format({ "tempLogic" : tempLogic }))
+            logger.log(2,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
 
 def logicProcess(statement):
@@ -495,5 +495,4 @@ def logicProcess(statement):
         else:
             return False
     except:
-        logger.debug("Logic processing failed {}".format({ "statement" : statement }))
         return False

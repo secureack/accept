@@ -17,7 +17,7 @@ class rename(processor.processor):
                     try:
                         del event[oldField]
                     except KeyError:
-                        self.logger.debug(f"Unable to delete {oldField} from {event}")
+                        self.logger.log(8,"Unable to delete",{ "field" : oldField },extra={ "source" : "rename", "type" : "error" })
             elif type(newField) is list:
                 for k, v in newField[1].items():
                     if k.startswith("if ") and logic.ifEval(k,{ "data" : {  "event" : event } }):
@@ -31,6 +31,6 @@ class rename(processor.processor):
                             try:
                                 del event[oldField]
                             except KeyError:
-                                self.logger.debug(f"Unable to delete {oldField} from {event}")
+                                self.logger.log(8,"Unable to delete",{ "field" : oldField },extra={ "source" : "rename", "type" : "error" })
                         break
         return event
