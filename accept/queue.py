@@ -11,7 +11,7 @@ PASSTHROUGH_ARGS = {
     "cache_dir" : "cache",
     "config" : ""
 }
-WORKER_START_CMDLINE = f"python3 {sys.argv[0]} process " + " ".join([ f"--{arg} {getattr(globalSettings.args,arg)}" for arg, default in PASSTHROUGH_ARGS.items() if getattr(globalSettings.args,arg) != default ])
+WORKER_START_CMDLINE = f"{sys.executable} {sys.argv[0]} process " + " ".join([ f"--{arg} {getattr(globalSettings.args,arg)}" for arg, default in PASSTHROUGH_ARGS.items() if getattr(globalSettings.args,arg) != default ])
 
 def limitVirtualMemory():
     resource.setrlimit(resource.RLIMIT_AS, (globalSettings.args.flush_thread_max_memory, resource.RLIM_INFINITY))
