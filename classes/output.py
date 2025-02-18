@@ -1,4 +1,3 @@
-import inspect
 import time
 
 from core import globalSettings, globalLogger
@@ -15,7 +14,9 @@ class output(base.base):
     def processHandler(self,event,stack=[]):
         eventStartTime = time.perf_counter_ns()
         if self.trace and type(event) == dict:
-            event["__trace__"] = stack
+            if "__accept__" not in event:
+                event["__accept__"] = { }
+            event["__accept__"]["trace"] = stack
         self.process(event)
         self.updateProcessStats(eventStartTime)
         
