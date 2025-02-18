@@ -68,7 +68,7 @@ class investigate(output.output):
             stringValue = str(value)
             for datetimeTest in datetimeRegex:
                 if datetimeTest.match(stringValue):
-                    stringValue = f"${stringValue}"
+                    stringValue = f"@{stringValue}"
             fieldMappings = [(f"{field}__text__", stringValue)]
             if type(value) is int:
                 fieldMappings.append((f"{field}__number__",float(value)))
