@@ -10,10 +10,11 @@ class logic(processor.processor):
         self.logicStatements = coreLogic.complieIf(logicString)
         super().__init__(**kwargs)
 
-    def processHandler(self,event):
+    def processHandler(self,event,stack=[]):
+        stack.append(self.id)
         eventStartTime = time.perf_counter()
         if coreLogic.compliedEval(self.logicString,self.logicStatements,{ "data" : { "event" : event } }): 
             self.updateProcessStats(eventStartTime)
             for next in self.next if self.next else []:
-                next.processHandler(event)
+                next.processHandler(event,stack)
         return event
