@@ -60,7 +60,7 @@ class opensearch(output.output):
             # Event errors occurred
             if resultCode == 1:
                 for eventError in eventErrors:
-                    self.logger.log(3,"Reject By opensearch",{ "reason" : f"{eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}" } )
+                    self.logger.log(10,"Reject By opensearch",{ "reason" : f"{eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}" } )
                     failedEvents.append(json.dumps({ "@timestamp" : datetime.datetime.now().isoformat(), "message" : self.buffer[eventError[0]], "error_type" : eventError[1]['index']['error']['type'], "error_reason" : eventError[1]['index']['error']['reason'] }))
             elif resultCode == 2:
                 sys.exit(2)
@@ -79,7 +79,7 @@ class opensearch(output.output):
                         sys.exit(10)
                     elif resultCode == 1:
                         for eventError in eventErrors:
-                            self.logger.log(3,"Reject By opensearch",{ "reason" : f"{eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}" } )
+                            self.logger.log(10,"Reject By opensearch",{ "reason" : f"{eventError[1]['index']['error']['type']} - {eventError[1]['index']['error']['reason']}" } )
                             failedEvents.append(json.dumps({ "@timestamp" : datetime.datetime.now().isoformat(), "message" : chunk[eventError[0]], "error_type" : eventError[1]['index']['error']['type'], "error_reason" : eventError[1]['index']['error']['reason'] }))
         if len(failedEvents) > 0:
             events = self.buildEvents(failedEvents)

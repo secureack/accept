@@ -4,9 +4,10 @@ import time
 startTime = time.perf_counter()
 
 mainParser = argparse.ArgumentParser(add_help=False)
-mainParser.add_argument('--log_level', type=int, default=6, help='--log_level 6')
+mainParser.add_argument('--log_level', type=int, default=10, help='--log_level 10')
 mainParser.add_argument('--debug', type=bool, default=False, help='Flag to enable debug', nargs="?", const=True)
 mainParser.add_argument('--cache_dir', type=str, default="cache", help='--cache_dir <path_to_cache_dir>')
+mainParser.add_argument('--version', type=str, default=False, help='Show version information', nargs="?", const="1.1-beta")
 subParsers = mainParser.add_subparsers(help='commands')
 
 acceptParser = subParsers.add_parser('accept', parents=[mainParser])
@@ -29,9 +30,13 @@ if __name__ == "__main__":
 else:
     args.main = False
 
-from core import globalLogger, globalSettings
+from core import globalSettings
 globalSettings.args = args
-globalLogger.logger.setLevel(globalSettings.args.log_level)
+if globalSettings.args.version:
+    print(globalSettings.args.version)
+    exit()
+
+from core import globalLogger
 
 if args.main:
     from core import parser, plugins, pipelines
@@ -46,4 +51,5 @@ if args.main:
     elif args.component == "process":
         from process import process
         process.start(loadedPipelines)
-globalLogger.logger.log(7,"Execution time",{ "took" : time.perf_counter() - startTime },extra={ "source" : "runtime", "type" : "stats" })
+globalLogger.logger.log(6,"Execution time",{ "took" : time.perf_counter() - startTime },extra={ "source" : "runtime", "type" : "stats" })
+

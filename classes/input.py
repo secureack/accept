@@ -51,7 +51,7 @@ class input(base.base):
         except AttributeError:
             pass
         except Exception as e:
-            self.logger.log(3,f"Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "input", "type" : "exception" },exc_info=True)
+            self.logger.log(25,f"Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "input", "type" : "exception" },exc_info=True)
         filePath = str(Path(f"{globalSettings.args.cache_dir}/{uuid.uuid4()}.{globalSettings.args.pipeline}.{self.name}.build"))
         self.cacheWriter = {
             "createdTime" : time.time(),
@@ -76,8 +76,8 @@ class input(base.base):
                 item()
             os.remove(cacheFile)
         else:
-            self.logger.log(3,f"Cache file does not exist",{ "name" : self.name, "id" : self.id, "cache" : globalSettings.args.cache },extra={ "source" : "cache", "type" : "exception" })
-        self.logger.log(5,f"Cache file processed",{ "name" : self.name, "id" : self.id, "cache" : globalSettings.args.cache, "took" : time.perf_counter() - startTime },extra={ "source" : "cache", "type" : "stats" })
+            self.logger.log(50,f"Cache file does not exist",{ "name" : self.name, "id" : self.id, "cache" : globalSettings.args.cache },extra={ "source" : "cache", "type" : "exception" })
+        self.logger.log(7,f"Cache file processed",{ "name" : self.name, "id" : self.id, "cache" : globalSettings.args.cache, "took" : time.perf_counter() - startTime },extra={ "source" : "cache", "type" : "stats" })
 
     def event(self,event):
         event = event.strip()

@@ -9,7 +9,7 @@ def start(pipelines):
     retryBuffer(True)
     lastRetryCheck = time.time()
     for pipeline in pipelines:
-        globalLogger.logger.log(5,"starting pipeline",{ "pipeline" : pipeline},extra={ "source" : "pipeline", "type" : "start" })
+        globalLogger.logger.log(7,"starting input",{ "id" : pipeline.id, "name" : pipeline.name},extra={ "source" : "pipeline", "type" : "start" })
         threading.Thread(target=pipeline.start, args=()).start()
     while len([ x for x in pipelines if x.running ]) > 0:
         if lastRetryCheck + 60 < time.time():

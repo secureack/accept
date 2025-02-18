@@ -204,9 +204,9 @@ def dynamic(varString:str,dicts:dict=None,functionSafeList:dict=functions.availa
                 try:
                     return functionSafeList[functionName](*functionArgs,**functionKwargs)
                 except Exception as e:
-                    globalLogger.logger.log(3,f"Function Exception",extra={ "source" : "function", "type" : "exception" },exc_info=True)
+                    globalLogger.logger.log(25,f"Function Exception",extra={ "source" : "function", "type" : "exception" },exc_info=True)
             else:
-                globalLogger.logger.log(4,f"Function not found",{ "function_name" : functionName },extra={ "source" : "function", "type" : "exception" })
+                globalLogger.logger.log(25,f"Function not found",{ "function_name" : functionName },extra={ "source" : "function", "type" : "exception" })
     # Default to existing
     return varString
 

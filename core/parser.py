@@ -45,7 +45,9 @@ def yaml(yamlData):
             key = key.strip()
             if not key:
                 continue
-            if key in ["name","next","id","plugin"]:
+            if key == "type":
+                key = "plugin"
+            if key in ["name","next","id","plugin","type"]:
                 objectData[key] = value
             else:
                 objectData["properties"][key] = value
