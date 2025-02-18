@@ -1,47 +1,177 @@
 input:
-  id: beats
+  id: 1
   name: beats
-  type: beats
-  bindPort: 3001
-  bindAddress: 0.0.0.0
+  plugin: beats
   flush_interval: 10
-  flush_every: 15000
-  next: ["load"]
+  bindPort: 3002
+  bindAddress: 0.0.0.0
+  next: ["loadJson"]
 
 processor:
-  id: "load"
-  type: loadJson
+  id: "loadJson"
+  name: Load JSON
+  plugin: toJson
+  next: ["flatten"]
+
+processor:
+  id: "flatten"
+  name: flatten
+  plugin: flatten
   next: ["agent"]
 
 processor:
   id: "agent"
-  type: rename
-  rename: { "host.os.type" : "os", "host.os.version" : "os_version", "host.os.name" : "os_name", "host.architecture" : "os_architecture", "agent.version" : "agent_version", "agent.id" : "agent_id", "agent.type" : "agent_type", "host.ip" : "ip_list", "host.mac" : "mac_list" , "host.hostname" : "host"}
+  name: agent
+  plugin: rename
+  rename: { "host.os.type" : "os", "host.os.version" : "os_version", "host.os.name" : "os_name", "host.architecture" : "os_architecture", "agent.version" : "agent_version", "agent.id" : "agent_id", "agent.type" : "agent_type", "host.ip" : "ip_list", "host.mac" : "mac_list" , "host.hostname" : "host" }
   next: ["agent.lower"]
 
 processor:
   id: "agent.lower"
-  type: lowercase
+  name: agent
+  plugin: lowercase
   fields: ["host"]
-  next: ["inject"]
+  next: ["agent.metricbeat"]
 
 processor:
-  id: inject
-  type: inject
+  id: "agent.metricbeat"
+  name: agent
+  plugin: rename
+  rename: { "metricset.name" : "metric" }
+  next: [3,4,5,6,7,8,9,10]
+
+processor:
+  id: 3
+  name: cpu
+  plugin: logic
+  logicString: if data[event][metric] == "cpu"
+  next: [300]
+
+processor:
+  id: 4
+  name: memory
+  plugin: logic
+  logicString: if data[event][metric] == "memory"
+  next: [400]
+
+processor:
+  id: 5
+  name: process
+  plugin: logic
+  logicString: if data[event][metric] == "process"
+  next: [500]
+
+processor:
+  id: 6
+  name: uptime
+  plugin: logic
+  logicString: if data[event][metric] == "uptime"
+  next: [600]
+
+processor:
+  id: 7
+  name: filesystem
+  plugin: logic
+  logicString: if data[event][metric] == "filesystem"
+  next: [700]
+
+processor:
+  id: 8
+  name: network
+  plugin: logic
+  logicString: if data[event][metric] == "network"
+  next: [800]
+
+processor:
+  id: 9
+  name: diskio
+  plugin: logic
+  logicString: if data[event][metric] == "diskio"
+  next: [900]
+
+processor:
+  id: 10
+  name: load
+  plugin: logic
+  logicString: if data[event][metric] == "load"
+  next: [1000]
+
+processor:
+  id: 300
+  name: cpu
+  plugin: rename
+  rename: { "system.cpu.total.pct" : "cpu", "system.cpu.cores" : "cpu_cores", "system.cpu.idle.pct" : "cpu_idle", "system.cpu.iowait.pct" : "cpu_iowait" }
+  next: [999999]
+
+processor:
+  id: 400
+  name: memory
+  plugin: rename
+  rename: { "system.memory.total" : "memory_total", "system.memory.actual.free" : "memory_free", "system.memory.actual.used.bytes" : "memory_used", "system.memory.actual.used.pct" : "memory", "system.memory.swap.used.bytes" : "memory_swap_used", "system.memory.swap.used.pct" : "memory_swap" }
+  next: [999999]
+
+processor:
+  id: 500
+  name: process
+  plugin: rename
+  rename: { "process.pid" : "pid", "process.parent.pid" : "parent_pid", "process.working_directory" : "working_directory", "process.executable" : "image", "user.name" : "user", "system.process.cpu.total.pct" : "cpu", "system.process.memory.rss.pct" : "memory", "process.name" : "name", "system.process.cmdline" : "cmd_line" }
+  next: [999999]
+
+processor:
+  id: 600
+  name: uptime
+  plugin: rename
+  rename: { "system.uptime.duration.ms" : "uptime" }
+  next: [999999]
+
+processor:
+  id: 700
+  name: filesystem
+  plugin: rename
+  rename: { "system.filesystem.device_name" : "device", "system.filesystem.available" : "filesystem_available", "system.filesystem.free" : "filesystem_free", "system.filesystem.total" : "filesystem_total", "system.filesystem.used.bytes" : "filesystem_used", "system.filesystem.used.pct" : "filesystem", "system.filesystem.type" : "filesystem_type", "system.filesystem.mount_point" : "filesystem_mount" }
+  next: [999999]
+
+processor:
+  id: 800
+  name: network
+  plugin: rename
+  rename: { "system.network.name" : "device", "system.network.in.bytes" : "bytes_in", "system.network.in.packets" : "packets_in", "system.network.in.errors" : "errors_in", "system.network.in.dropped" : "dropped_in", "system.network.out.bytes" : "bytes_out", "system.network.out.packets" : "packets_out", "system.network.out.errors" : "errors_out", "system.network.out.dropped" : "dropped_out" }
+  next: [999999]
+
+processor:
+  id: 900
+  name: diskio
+  plugin: rename
+  rename: { "system.diskio.name" : "device", "system.diskio.io.ops" : "io_ops", "system.diskio.io.time" : "io_time", "system.diskio.read.bytes" : "io_read_bytes", "system.diskio.read.count" : "io_read_count", "system.diskio.read.time" : "io_read_time", "system.diskio.write.bytes" : "io_write_bytes", "system.diskio.write.count" : "io_write_count", "system.diskio.write.time" : "io_write_time" }
+  next: [999999]
+
+processor:
+  id: 1000
+  name: load
+  plugin: rename
+  rename: { "system.load.norm.1" : "load", "system.load.norm.5" : "load_5", "system.load.norm.15" : "load_15" }
+  next: [999999]
+
+processor:
+  id: 999999
+  name: inject
+  plugin: inject
   inject: {"pipeline":"metricbeat","log_server":"accept-1"}
-  next: ["blacklist"]
+  next: [1000000]
 
 processor:
-  id: blacklist
-  type: blacklist
-  blacklist: ["log","input.*","host.*","@metadata.*","event.*","agent.*","system.*"]
-  next: ["investigate"]
+  id: 1000000
+  name: blacklist
+  plugin: blacklist
+  blacklist: ["metricset.*","event.*","host.*","process.*","service.*","agent.*","ecs.*","@metadata.*","system.*"]
+  next: [1000001]
 
 output:
-  id: investigate
+  id: 1000001
   name: investigate
-  type: investigate
-  index: <index>
+  plugin: investigate
+  index: accept-metricbeat
   password: <password>
-  url: https://<url>:9200
+  url: https://127.0.0.1:9200
   username: <username>
+  verify: false
