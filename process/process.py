@@ -11,5 +11,5 @@ def start(pipelines):
 
     if globalSettings.args.pipeline_time:
         for id, objectClass in core.pipelines.objectCache.items():
-            globalLogger.logger.log(1,"Process Stats",{ "stats" : objectClass.processStats() },extra={ "source" : "process", "type" : "stats" })
+            globalLogger.logger.log(100,"Process Stats",{ "stats" : objectClass.processStats() },extra={ "source" : "process", "type" : "stats" })
     globalLogger.logger.log(6,"Memory Stats", { "rss": psutil.Process().memory_info().rss }, extra={ "source" : "runtime", "type" : "memory" })

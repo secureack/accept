@@ -1,4 +1,6 @@
-from core import typecast
+import sys
+
+from core import typecast, globalLogger
 
 def yaml(yamlData):
     def include(filename,indent):
@@ -45,8 +47,21 @@ def yaml(yamlData):
             key = key.strip()
             if not key:
                 continue
-            if key in ["name","next","id","plugin"]:
+            if key == "type":
+                key = "plugin"
+            if key in ["name","next","id","plugin","type"]:
                 objectData[key] = value
             else:
                 objectData["properties"][key] = value
+    for objectItem in objects.values():
+        if objectItem["type"] in ["input"]:
+            for expectedProperty in ["name","plugin"]:
+                if expectedProperty not in objectItem:
+                    globalLogger.logger.log(100,f"Missing property '{expectedProperty}' from object '{objectItem.get('id')}'")
+                    sys.exit(2)
+        if objectItem["type"] in ["processor","output"]:
+            for expectedProperty in ["id","plugin"]:
+                if expectedProperty not in objectItem:
+                    globalLogger.logger.log(100,f"Missing property '{expectedProperty}' from object '{objectItem.get('id')}'")
+                    sys.exit(2)
     return [objects]

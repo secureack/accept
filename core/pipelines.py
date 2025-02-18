@@ -12,7 +12,8 @@ def load(pipeline):
         try:
             inputClass = plugins.available["input"][input["plugin"]](name=input["name"],id=input["id"],**input["properties"])
         except KeyError:
-            globalLogger.logger.error(f"input plugin {input['plugin']} not found")
+            globalLogger.logger.log(100,"Plugin Not Found",{ "plugin" : input['plugin'] },extra={ "source" : "pipeline", "type" : "error" })
+            exit(5)
             inputClass = classes.input.input(name=input["name"],id=input["id"],**input["properties"])
         objectCache[input["id"]] = inputClass
         inputClasses.append(inputClass)
@@ -23,7 +24,7 @@ def load(pipeline):
             try:
                 nextItem = pipeline[processItem[1]]
             except KeyError:
-                globalLogger.logger.error(f"pipeline item {processItem[1]} not found")
+                globalLogger.logger.log(25,"WARNING: Config error referenced item not found",{ "item" : processItem[1] },extra={ "source" : "pipeline", "type" : "error" })
                 continue
             try:
                 nextClass = objectCache[nextItem["id"]]
@@ -31,11 +32,8 @@ def load(pipeline):
                 try:
                     nextClass = plugins.available[nextItem["type"]][nextItem["plugin"]](id=nextItem["id"],**nextItem["properties"])
                 except KeyError:
-                    globalLogger.logger.error(f"{nextItem['type']} plugin {nextItem['plugin']} not found")
-                    if nextItem["type"] == "processor":
-                        nextClass = classes.processor.processor(id=nextItem["id"],**nextItem["properties"])
-                    elif nextItem["type"] == "output":
-                        nextClass = classes.output.output(id=nextItem["id"],**nextItem["properties"])
+                    globalLogger.logger.log(100,"Plugin Not Found",{ "plugin" : nextItem['plugin'] },extra={ "source" : "pipeline", "type" : "error" })
+                    exit(5)
                 if nextItem["type"] == "processor" and nextClass.next:
                     nextItem["next"] = nextClass.next
                     nextClass.next = None

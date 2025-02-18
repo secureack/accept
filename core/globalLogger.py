@@ -36,7 +36,7 @@ class _logger(logging.Handler):
 logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s[%(process)d] %(filename)s:%(lineno)d | %(message)s")
 logger = logging.getLogger(__name__)
 logger.propagate = False
-logger.setLevel(5)
+logger.setLevel(globalSettings.args.log_level)
 logger.addHandler(_logger())
 
 def getLogger(name,level=5):
@@ -49,7 +49,7 @@ def getLogger(name,level=5):
 def unhandledExceptionHook(*exc_info):
     global logger
     message = ''.join(format_exception(*exc_info)).replace("\n","\\n")
-    logger.log(10,f"Critical Uncaught Exception",{ "exception" : message },extra={ "source" : "exception", "type" : "exception" })
+    logger.log(100,f"Critical Uncaught Exception",{ "exception" : message },extra={ "source" : "exception", "type" : "exception" })
 
 sys.excepthook = unhandledExceptionHook
 

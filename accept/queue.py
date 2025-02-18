@@ -71,7 +71,7 @@ def process():
             cache = taskPool.waiting.pop()
             process = Process(cache)
             taskPool.running.append(process)
-            globalLogger.logger.log(6,"Worker Started",{ "cache" : cache, "pid" : process.pid },extra={ "source" : "queue", "type" : "start" })
+            globalLogger.logger.log(7,"Worker Started",{ "cache" : cache, "pid" : process.pid },extra={ "source" : "queue", "type" : "start" })
     except IndexError:
         pass
 
@@ -81,11 +81,11 @@ def process():
             sys.stdout.write(line.decode("utf-8"))
         if running and time.time() - process.startTime > ( process.startTime + globalSettings.args.flush_timeout ):
             process.process.terminate()
-            globalLogger.logger.log(4,"Worker Killed",{ "cache" : process.cache, "pid" : process.process.pid },extra={ "source" : "queue", "type" : "killed" })
+            globalLogger.logger.log(10,"Worker Killed",{ "cache" : process.cache, "pid" : process.process.pid },extra={ "source" : "queue", "type" : "killed" })
         if not running:
             for line in iter(process.process.stdout.readline, b''):
                 sys.stdout.write(line.decode("utf-8"))
             sys.stdout.flush()
-            globalLogger.logger.log(6,"Worker Ended",{ "cache" : process.cache, "pid" : process.process.pid },extra={ "source" : "queue", "type" : "end" })
+            globalLogger.logger.log(7,"Worker Ended",{ "cache" : process.cache, "pid" : process.process.pid },extra={ "source" : "queue", "type" : "end" })
             taskPool.running.remove(process)
             break

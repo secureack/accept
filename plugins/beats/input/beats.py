@@ -69,7 +69,7 @@ class beats(input.input):
         try:
             self.server.bind((self.bindAddress, self.bindPort))
         except Exception as e:
-            self.logger.log(1,f"Critical Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
+            self.logger.log(75,f"Critical Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
             os._exit(255)
         self.server.listen(5)
         self.sock = self.server
@@ -89,7 +89,7 @@ class beats(input.input):
                 self.currentConnections += 1
                 threading.Thread(target=self.accept, args=(client,address)).start()
             except Exception as e:
-                self.logger.log(1,f"Connection Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
+                self.logger.log(75,f"Connection Exception",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
     def stop(self):
         if self.server:
             if self.ssl:
@@ -109,11 +109,11 @@ class beats(input.input):
                 break
             buffer += tempBuffer
         if len(buffer) < bufferLength:
-            self.logger.log(4,f"Unexpected buffer size",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "error" })
+            self.logger.log(15,f"Unexpected buffer size",{ "name" : self.name, "id" : self.id },extra={ "source" : "beats", "type" : "error" })
         return buffer
 
     def accept(self,client,address):
-        self.logger.log(1,f"New beats connection",{ "name" : self.name, "id" : self.id, "src_ip" : address },extra={ "source" : "beats", "type" : "connect" })
+        self.logger.log(6,f"New beats connection",{ "name" : self.name, "id" : self.id, "src_ip" : address },extra={ "source" : "beats", "type" : "connect" })
         try:
             nextAck = 0
             windowSize = 0
@@ -174,7 +174,7 @@ class beats(input.input):
                         byteReader.close()
                         byteReader = None
         except Exception as e:
-            self.logger.log(1,f"Lumberjack Protocol Exception",{ "name" : self.name, "id" : self.id, "src_ip" : address },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
+            self.logger.log(100,f"Lumberjack Protocol Exception",{ "name" : self.name, "id" : self.id, "src_ip" : address },extra={ "source" : "beats", "type" : "exception" },exc_info=True)
         finally:
             client.close()
             self.currentConnections -= 1
