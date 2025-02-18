@@ -13,8 +13,8 @@ from core import typecast
 from process import postRegister
 
 datetimeRegex = [ 
-    re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z)$"),
-    re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?)(\+\d{2}:\d{2})$"),
+    re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z)$"),
+    re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?)(\+\d{2}:\d{2})$"),
     re.compile(r"^\d{4}-\d{2}-\d{2}$"),
     re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$"),
     re.compile(r"^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$"),
