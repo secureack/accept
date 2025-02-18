@@ -4,12 +4,24 @@ import datetime
 import urllib3
 import time
 import sys
+import re
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from classes import output
 from core import typecast
 from process import postRegister
+
+datetimeRegex = [ 
+    re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z)$"),
+    re.compile(r"^\d{4}-\d{2}-\d{2}$"),
+    re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$"),
+    re.compile(r"^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}$"),
+    re.compile(r"^\d{2}\/\d{2}\/\d{4}$"),
+    re.compile(r"^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$"),
+    re.compile(r"^\d{2}-\d{2}-\d{4}$"),
+    re.compile(r"^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$")
+]
 
 class investigate(output.output):
 
@@ -53,7 +65,11 @@ class investigate(output.output):
         def fieldTypeBuilder(field,value):
             if field == "@timestamp":
                 return [(field, value)]
-            fieldMappings = [(f"{field}__text__", str(value))]
+            stringValue = str(value)
+            for datetimeTest in datetimeRegex:
+                if datetimeTest.match(stringValue):
+                    stringValue = f"${stringValue}"
+            fieldMappings = [(f"{field}__text__", stringValue)]
             if type(value) is int:
                 fieldMappings.append((f"{field}__number__",float(value)))
             elif type(value) is float:
