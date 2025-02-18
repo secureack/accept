@@ -7,7 +7,7 @@ mainParser = argparse.ArgumentParser(add_help=False)
 mainParser.add_argument('--log_level', type=int, default=6, help='--log_level 6')
 mainParser.add_argument('--debug', type=bool, default=False, help='Flag to enable debug', nargs="?", const=True)
 mainParser.add_argument('--cache_dir', type=str, default="cache", help='--cache_dir <path_to_cache_dir>')
-mainParser.add_argument('--version', type=str, default=False, help='Show version information', nargs="?", const="1.1-beta")
+mainParser.add_argument('--version', type=str, default=False, help='Show version information', nargs="?", const="1.2-pr")
 subParsers = mainParser.add_subparsers(help='commands')
 
 acceptParser = subParsers.add_parser('accept', parents=[mainParser])
