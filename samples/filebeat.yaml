@@ -1,47 +1,205 @@
 input:
-  id: beats
+  id: 1
   name: beats
-  type: beats
+  plugin: beats
   bindPort: 3001
   bindAddress: 0.0.0.0
   flush_interval: 10
   flush_every: 15000
-  next: ["load"]
+  next_error: "unknown"
+  next: [2]
 
 processor:
-  id: "load"
-  type: loadJson
+  id: 2
+  plugin: loadJson
   next: ["agent"]
 
 processor:
+  id: proxy.match
+  plugin: match
+  field1: host.hostname
+  match1: "proxy-*"
+  next1: "agent"
+
+processor:
   id: "agent"
-  type: rename
+  plugin: rename
   rename: { "host.os.type" : "os", "host.os.version" : "os_version", "host.os.name" : "os_name", "host.architecture" : "os_architecture", "agent.version" : "agent_version", "agent.id" : "agent_id", "agent.type" : "agent_type", "host.ip" : "ip_list", "host.mac" : "mac_list" , "host.hostname" : "host", "log.file.path" : "log_file"}
   next: ["agent.lower"]
 
 processor:
   id: "agent.lower"
-  type: lowercase
+  plugin: lowercase
   fields: ["host"]
-  next: ["inject"]
+  next: ["filebeat.match"]
 
 processor:
-  id: inject
-  type: inject
+  id: filebeat.match
+  plugin: matchAndExtract
+  typecast: true
+  field1: message
+  match1: "^\{\"log\":\"(?P<application>[^\s]+) (?P<name>.*) \| (?P<message>\{.*\}).*\"}"
+  next1: "aops.fixJson"
+  field2: message
+  match2: "^\{\"log\":\"(?P<level>[^\s]+):\s+(?P<request__src_ip>[^\s]+):(?P<request__src_port>[^\s]+)\s+-\s+\\\"(?P<request__method>[^\s]+)\s+(?P<request__path>[^\s]+) HTTP\/1.1\\\"\s+(?P<request__status_code>[\d]+)\s+(?P<request__status_text>[\w]+)"
+  next2: "filebeat.pipeline"
+  field3: message
+  match3: "^(?P<time>[^\s]+)\s+(?P<application>[^\s]+)\s+python3\[(?P<pid>\d+)\]:\s+(?P<name>.*) \| (?P<message>\{.*\})$"
+  next3: "aops.merge"
+  field4: message
+  match4: "^(?P<syslog_time>\w+ \d+ \d+:\d+:\d+)\s+(?P<hostname>[^\s]+)\s+(?P<application>[^\s]+)\[(?P<pid>\d+)\]:\s+(?P<message>.*)$"
+  next4: "filebeat.pipeline2"
+  field5: message
+  match5: "^\{\"log\":\"(?P<time>\d+-\d+-\d+ \d+:\d+:\d+),\d+ A-Ops (?P<log_level>[^\s]+) (?P<mod>[^\[]+)\[(?P<pid>\d+)\] (?P<file>[^:]+):(?P<line_number>\d+) \| Audit (?P<message>\{.*\}).*\"\}"
+  next5: "aops.fixJson2"
+  default: "filebeat.other"
+
+processor:
+  id: filebeat.other
+  plugin: match
+  field1: message
+  match1: "^{.*}$"
+  next1: "message.json.text"
+  default: "unknown"
+
+processor:
+  id: message.json.text
+  plugin: stringEvent
+  field: message
+  next: ["filebeat.pipeline2"]
+
+processor:
+  id: aops.fixJson
+  plugin: decode
+  field: message
+  next: ["aops.loadJson"]
+
+processor:
+  id: aops.fixJson2
+  plugin: decode
+  field: message
+  next: ["aops.loadJson2"]
+
+processor:
+  id: aops.loadJson
+  plugin: loadJson
+  field: message
+  next: ["aops.time.rules"]
+
+processor:
+  id: aops.loadJson2
+  plugin: loadJson
+  field: message
+  singleQuoteSupport: true
+  next: ["aops.time.rules2"]
+
+processor:
+  id: aops.merge
+  plugin: merge
+  field: message
+  next: ["aops.time.rules"]
+
+processor:
+  id: aops.time.rules
+  plugin: match
+  field1: time
+  match1: ".+"
+  next1: "aops.time"
+  field2: @timestamp
+  match2: "^(\d+|\d+\.\d+)$"
+  next2: "aops.time2"
+
+processor:
+  id: aops.time.rules2
+  plugin: match
+  field1: time
+  match1: ".+"
+  next1: "aops.time4"
+
+processor:
+  id: aops.time
+  plugin: setTime
+  field: time
+  inputFormat: "iso"
+  next: ["filebeat.pipeline"]
+
+processor:
+  id: aops.time2
+  plugin: setTime
+  field: @timestamp
+  inputFormat: "epoch"
+  next: ["filebeat.pipeline"]
+
+processor:
+  id: aops.time3
+  plugin: setTime
+  field: @timestamp
+  inputFormat: "epoch"
+  next: ["filebeat.pipeline"]
+
+processor:
+  id: aops.time4
+  plugin: setTime
+  field: time
+  inputFormat: "iso"
+  next: ["filebeat.rename"]
+
+processor:
+  id: filebeat.rename
+  plugin: rename
+  rename: {"data.PID" : "pid","data.duration" : "duration","data.exit_code" : "exit_code","data.memory" : "memory","data.task_id" : "task_id","data.task_type" : "task_type","data.trigger_id" : "trigger_id","data.worker_id": "worker_id"}
+  next: ["filebeat.pipeline"]
+
+processor:
+  id: filebeat.pipeline
+  plugin: inject
   inject: {"pipeline":"filebeat","log_server":"accept-1"}
   next: ["blacklist"]
 
 processor:
   id: blacklist
-  type: blacklist
-  blacklist: ["log","input.*","host.*","@metadata.*","event.*","agent.*","system.*","message"]
+  plugin: blacklist
+  blacklist: ["log","input.*","host.*","@metadata.*","winlog.*","event.*","agent.*","system.*","message"]
+  next: ["investigate"]
+
+processor:
+  id: filebeat.pipeline2
+  plugin: inject
+  inject: {"pipeline":"filebeat","log_server":"accept-1"}
+  next: ["blacklist2"]
+
+processor:
+  id: blacklist2
+  plugin: blacklist
+  blacklist: ["log","input.*","host.*","@metadata.*","winlog.*","event.*","agent.*","system.*"]
+  next: ["investigate"]
+
+processor:
+  id: unknown
+  plugin: stringEvent
+  next: ["unknown.inject"]
+
+processor:
+  id: unknown.inject
+  plugin: inject
+  inject: {"pipeline":"filebeat","log_server":"accept-1","error":"unknown"}
   next: ["investigate"]
 
 output:
   id: investigate
   name: investigate
-  type: investigate
-  index: <index>
+  plugin: investigate
+  index: accept-filebeat
   password: <password>
-  url: https://<url>:9200
+  url: https://127.0.0.1:9200
   username: <username>
+  verify: false
+
+output:
+  id: drop
+  plugin: drop
+
+output:
+  id: stdout
+  plugin: stdout
+  name: stdout
