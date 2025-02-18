@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 import threading
 
-from core import globalSettings, globalLogger
+from core import globalSettings, globalLogger, objectCache
 from accept import queue
 from process import postRegister
 from classes import base
@@ -19,6 +19,7 @@ class input(base.base):
         self.logger = globalLogger.getLogger(__name__,kwargs.get("log_level",globalSettings.args.log_level))
         self.flushInterval = kwargs.get("flush_interval",60)
         self.flushEvery = kwargs.get("flush_every",1000000)
+        self.nextError = kwargs.get("next_error",None)
         super().__init__(**kwargs)
 
     def start(self):
@@ -69,8 +70,15 @@ class input(base.base):
             with open(cacheFile) as f:
                 for event in f:
                     eventStartTime = time.perf_counter_ns()
-                    for next in self.next if self.next else []:
-                        next.processHandler(event.strip(),stack=[self.id])
+                    try:
+                        for next in self.next if self.next else []:
+                            int("a")
+                            next.processHandler(event.strip(),stack=[self.id])
+                    except:
+                        if self.nextError and self.nextError in objectCache.objectCache:
+                            objectCache.objectCache[self.nextError].processHandler(event.strip(),stack=[self.id])
+                        else:
+                            raise
                     self.updateProcessStats(eventStartTime)
             for item in postRegister.items:
                 item()

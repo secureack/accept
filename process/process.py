@@ -1,6 +1,6 @@
 import psutil
 
-from core import globalSettings, globalLogger
+from core import globalSettings, globalLogger, objectCache
 import core.pipelines
 
 def start(pipelines):
@@ -10,6 +10,6 @@ def start(pipelines):
     pipeline.process()
 
     if globalSettings.args.pipeline_time:
-        for id, objectClass in core.pipelines.objectCache.items():
+        for id, objectClass in core.pipelines.objectCache.objectCache.items():
             globalLogger.logger.log(100,"Process Stats",{ "stats" : objectClass.processStats() },extra={ "source" : "process", "type" : "stats" })
     globalLogger.logger.log(6,"Memory Stats", { "rss": psutil.Process().memory_info().rss }, extra={ "source" : "runtime", "type" : "memory" })
