@@ -73,8 +73,9 @@ class input(base.base):
                     try:
                         for next in self.next if self.next else []:
                             next.processHandler(event.strip(),stack=[self.id])
-                    except:
+                    except Exception as e:
                         if self.nextError and self.nextError in objectCache.objectCache:
+                            globalLogger.logger.log(6,f"Event Exception Running Next Error",{ "name" : self.name, "id" : self.id },extra={ "source" : "input", "type" : "next_error" },exc_info=True)
                             objectCache.objectCache[self.nextError].processHandler(event.strip(),stack=[self.id])
                         else:
                             raise
