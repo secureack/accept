@@ -130,6 +130,8 @@ class investigate(output.output):
         if len(failedEvents) > 0:
             events = self.buildEvents(failedEvents)
             resultCode, resultMessage, eventErrors = self.flushOpenSearch(events)
+            if not resultCode == 0:
+                self.logger.log(10,"Failed events failed to flush",{ "result_code" : resultCode, "result_message" : resultMessage, "count" : len(eventErrors) } )
 
     def flushOpenSearch(self,bulkPayload):
         resultCode = 999
