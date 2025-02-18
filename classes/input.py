@@ -72,7 +72,6 @@ class input(base.base):
                     eventStartTime = time.perf_counter_ns()
                     try:
                         for next in self.next if self.next else []:
-                            int("a")
                             next.processHandler(event.strip(),stack=[self.id])
                     except:
                         if self.nextError and self.nextError in objectCache.objectCache:
