@@ -70,7 +70,7 @@ class input(base.base):
                 for event in f:
                     eventStartTime = time.perf_counter_ns()
                     for next in self.next if self.next else []:
-                        next.processHandler(event.strip())
+                        next.processHandler(event.strip(),stack=[self.id])
                     self.updateProcessStats(eventStartTime)
             for item in postRegister.items:
                 item()

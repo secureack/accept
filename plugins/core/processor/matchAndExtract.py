@@ -26,7 +26,8 @@ class matchAndExtract(processor.processor):
         self.next.reverse()
         super().__init__(**kwargs)
 
-    def processHandler(self,event):
+    def processHandler(self,event,stack=[]):
+        stack.append(self.id)
         eventStartTime = time.perf_counter_ns()
         for index, rule in enumerate(self.rules):
             if self.defaultRule is not None and index == 0:
@@ -50,9 +51,9 @@ class matchAndExtract(processor.processor):
                     else:
                         event = reResults
                     self.updateProcessStats(eventStartTime)
-                    self.next[index].processHandler(event)
+                    self.next[index].processHandler(event,stack)
                     return
         if self.defaultRule is not None:
             self.updateProcessStats(eventStartTime)
-            self.next[0].processHandler(event)
+            self.next[0].processHandler(event,stack)
         

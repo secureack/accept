@@ -1,6 +1,5 @@
 import inspect
 import time
-import uuid
 
 from core import globalSettings, globalLogger
 from classes import base
@@ -13,19 +12,10 @@ class output(base.base):
         self.trace = kwargs.get("trace",False)
         super().__init__(**kwargs)
 
-    def processHandler(self,event):
+    def processHandler(self,event,stack=[]):
         eventStartTime = time.perf_counter_ns()
         if self.trace and type(event) == dict:
-            eventTraceID = uuid.uuid4()
-            event["eventTraceID"] = eventTraceID
-            trace = []
-            for stack in inspect.stack():
-                try:
-                    if stack.function == "processHandler":
-                        trace.append(stack.frame.f_locals.get("self").id)
-                except:
-                    pass
-            self.logger.log(10,"Event Trace", { "trace_id" : f"{eventTraceID}", "trace" : trace }, extra={ "source" : "output", "type" : "trace" })
+            event["__trace__"] = stack
         self.process(event)
         self.updateProcessStats(eventStartTime)
         

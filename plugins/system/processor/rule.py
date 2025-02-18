@@ -21,13 +21,13 @@ class rule(processor.processor):
         self.next.reverse()
         super().__init__(**kwargs)
 
-    def processHandler(self,event):
+    def processHandler(self,event,stack=[]):
         eventStartTime = time.perf_counter_ns()
         for index, rule in enumerate(self.rules):
             if rule and coreLogic.compliedEval(rule,self.statements[index],{ "data" : { "event" : event } }):
                 self.updateProcessStats(eventStartTime)
                 try:
-                    self.next[index].processHandler(event)
+                    self.next[index].processHandler(event,stack)
                 except Exception as e:
                     raise Exception(f"Unable to execute next for rule {rule}, {e}")
                 break
