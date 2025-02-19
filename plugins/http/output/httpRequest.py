@@ -17,6 +17,7 @@ class httpRequest(output.output):
         self.bulkMaxEvents = kwargs.get("bulk_max_events",0)
         self.headers = kwargs.get("headers",{})
         self.expectedStatusCode = kwargs.get("status_code",200)
+        self.timeout = kwargs.get("timeout",60)
         self.buffer = []
         if self.bulk:
             postRegister.items.add(self.onEnd)
@@ -42,7 +43,7 @@ class httpRequest(output.output):
             request = requests.request
             if self.useSession:
                 request = self.session.request
-            response = request(self.method,self.url,json=self.buffer,verify=self.verify,headers=self.headers)
+            response = request(self.method,self.url,json=self.buffer,verify=self.verify,headers=self.headers,timeout=self.timeout)
             if response.status_code != self.expectedStatusCode:
                 self.logger.log(10,"Unexpected response status code",{ "status_code" : response.status_code, "expected_status_code" : self.expectedStatusCode, "url" : self.url, "response" : response.text },extra={ "source" : "httpRequest", "type" : "error" })
         self.buffer = []
