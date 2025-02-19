@@ -12,6 +12,10 @@ class httpWebHook(input.input):
     def __init__(self,**kwargs):
         self.bindAddress = kwargs.get("bind_address","127.0.0.1")
         self.bindPort = kwargs.get("bind_port",5656)
+        self.ssl = kwargs.get("ssl",False)
+        self.sslCertificate = kwargs.get("ssl_certificate",None)
+        self.sslPrivateKey = kwargs.get("ssl_private_key",None)
+        self.sslPrivateKeyPassword = kwargs.get("ssl_private_key_password",None)
         self.path = kwargs.get("path",None)
         self.contentType = kwargs.get("content_type","json")
         self.authParameter = kwargs.get("authentication_parameter",None)
@@ -24,7 +28,13 @@ class httpWebHook(input.input):
 
     def start(self):
         super().start()
-        uvicorn.run(self,host=self.bindAddress,port=self.bindPort)
+        additionalKwargs = {}
+        if self.ssl:
+            additionalKwargs["ssl_certfile"] = self.sslCertificate
+            additionalKwargs["ssl_keyfile"] = self.sslPrivateKey
+            if self.sslPrivateKeyPassword:
+                additionalKwargs["ssl-keyfile-password"] = self.sslPrivateKeyPassword
+        uvicorn.run(self,host=self.bindAddress,port=self.bindPort,**additionalKwargs)
 
     async def __call__(self, scope, receive, send):
         if scope.get("type") == "http":
