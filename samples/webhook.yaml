@@ -1,0 +1,26 @@
+input:
+  id: webhook1
+  name: webhook1
+  type: httpWebHook
+  flush_interval: 10
+  bind_port: 5656
+  next: ["loadJson"]
+
+input:
+  id: webhook2
+  name: webhook2
+  type: httpWebHook
+  flush_interval: 10
+  authentication_parameter: { "auth": "123" }
+  bind_port: 5657
+  next: ["loadJson"]
+
+processor:
+  id: loadJson
+  type: loadJson
+  next: ["stdout"]
+
+output:
+  id: stdout
+  type: stdout
+  name: stdout

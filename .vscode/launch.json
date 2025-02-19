@@ -12,8 +12,8 @@
                 "accept",
                 "--debug",
                 "--log_level", "6",
-                "--config", "samples/filebeat.yaml",
-                "--pipeline", "beats"
+                "--config", "samples/webhook.yaml",
+                "--pipeline", "webhook"
             ]
         },
         {
