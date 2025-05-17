@@ -21,10 +21,14 @@ class loadJson(processor.processor):
             fieldValue = event
             
         if fieldValue:
-            if self.singleQuoteSupport:
-                fieldValue = ast.literal_eval(fieldValue)
-            else:
-                fieldValue = json.loads(fieldValue,strict=self.strict)
+            if type(fieldValue) is str:
+                try:
+                    if self.singleQuoteSupport:
+                        fieldValue = ast.literal_eval(fieldValue)
+                    else:
+                        fieldValue = json.loads(fieldValue,strict=self.strict)
+                except:
+                    fieldValue = { "decode_error" : fieldValue }
             fieldValue = typecast.flatten(fieldValue)
             if self.outputField and type(event) is dict:
                 event[self.outputField] = fieldValue
