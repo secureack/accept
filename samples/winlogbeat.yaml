@@ -1,0 +1,78 @@
+input:
+  id: 1
+  name: beats
+  plugin: beats
+  flush_interval: 10
+  flush_every: 15000
+  bindPort: 3000
+  bindAddress: 0.0.0.0
+  next_error: "unknown"
+  next: ["loadJson"]
+
+processor:
+  id: "loadJson"
+  name: Load JSON
+  plugin: toJson
+  next: ["flatten"]
+
+processor:
+  id: "flatten"
+  name: flatten
+  plugin: flatten
+  next: ["agent"]
+
+processor:
+  id: "agent"
+  name: agent
+  plugin: rename
+  rename: { "host.os.type" : "os", "host.os.version" : "os_version", "host.os.name" : "os_name", "host.architecture" : "os_architecture", "agent.version" : "agent_version", "agent.id" : "agent_id", "agent.type" : "agent_type", "host.ip" : "ip_list", "host.mac" : "mac_list" , "host.hostname" : "host", "winlog.channel" : "log_file" }
+  next: ["agent.lower"]
+
+processor:
+  id: "agent.lower"
+  name: agent
+  plugin: lowercase
+  fields: ["host"]
+  next: ["rename"]
+
+processor:
+  id: rename
+  plugin: rename
+  rename: { "winlog.provider_name" : "provider_name", "winlog.event_id": "event_id", "winlog.record_id": "record_id", "winlog.task": "name", "winlog.event_data.SubjectUserName": "user", "winlog.event_data.SubjectDomainName": "domain", "winlog.event_data.SubjectUserSid": "user_sid", "winlog.event_data.SubjectLogonId": "logon_id", "winlog.event_data.TargetUserName": "target_user", "winlog.event_data.TargetDomainName": "target_domain", "winlog.event_data.TargetSid": "target_user_sid", "winlog.event_data.TargetUserSid": "target_user_sid", "winlog.keywords": "keywords", "winlog.event_data.PackageName": "package", "winlog.event_data.Workstation": "src_host", "winlog.event_data.IpAddress": "src_ip", "winlog.event_data.IpPort": "src_port", "winlog.event_data.ProcessId": "process_id", "winlog.event_data.ProcessName": "image", "winlog.event_data.ProcessCommandLine": "cmd", "winlog.event_data.NewProcessId": "process_id", "winlog.event_data.NewProcessName": "image", "winlog.event_data.NewProcessCommandLine": "cmd", "winlog.event_data.ParentProcessId": "parent_process_id", "winlog.event_data.ParentProcessName": "parent_image", "winlog.event_data.ParentProcessCommandLine": "parent_cmd", "winlog.event_data.User": "user", "winlog.event_data.Image": "image", "winlog.event_data.ProcessGuid": "process_guid", "winlog.event_data.CommandLine": "cmd", "winlog.event_data.CurrentDirectory": "dir", "winlog.event_data.ParentImage": "parent_image", "winlog.event_data.ParentCommandLine": "parent_cmd", "winlog.event_data.ParentProcessId": "parent_process_id", "winlog.event_data.ParentProcessGuid": "parent_process_guid", "winlog.event_data.ParentUser": "parent_user", "winlog.event_data.Hashes": "hashes", "winlog.event_data.FileVersion": "file_version", "winlog.event_data.Description": "file_description", "winlog.event_data.IntegrityLevel": "integrity_level", "winlog.event_data.Company": "file_company", "winlog.event_data.Product": "file_product", "winlog.event_data.LogonId": "logon_id", "winlog.event_data.LogonGuid": "logon_guid", "winlog.event_data.SourceHostname": "src_host", "winlog.event_data.SourceIp": "src_ip", "winlog.event_data.SourcePort": "src_port", "winlog.event_data.DestinationHostname": "dest_host", "winlog.event_data.DestinationIp": "dest_ip", "winlog.event_data.DestinationPort": "dest_port", "winlog.event_data.Protocol": "protocol", "winlog.event_data.Initiated": "initiated", "winlog.event_data.QueryName": "query", "winlog.event_data.QueryResults": "query_results", "winlog.event_data.QueryStatus": "query_status", "winlog.event_data.TerminalSessionId": "session_id", "winlog.event_data.LogonType" : "logon_type", "winlog.event_data.TargetLogonId" : "target_logon_id" }
+  next: ["lower"]
+
+processor:
+  id: "lower"
+  name: lower
+  plugin: lowercase
+  fields: ["user","domain","target_user","target_domain"]
+  next: [999999]
+
+processor:
+  id: 999999
+  name: inject
+  plugin: inject
+  inject: {"pipeline":"winlogbeat","log_server":"accept-1"}
+  next: [1000000]
+
+processor:
+  id: 1000000
+  name: blacklist
+  plugin: blacklist
+  blacklist: ["winlog.process.*","winlog.user.*","event.*","host.*","process.*","service.*","agent.*","ecs.*","@metadata.*","system.*","winlog.provider_guid","winlog.computer_name","winlog.api"]
+  next: [1000001]
+
+processor:
+  id: unknown
+  plugin: stringEvent
+  next: [1000001]
+
+output:
+  id: 1000001
+  name: investigate
+  plugin: investigate
+  index: accept-winlogbeat
+  password: <password>
+  url: https://127.0.0.1:9200
+  username: <username>
+  verify: false
