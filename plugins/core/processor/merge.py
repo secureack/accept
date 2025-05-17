@@ -13,4 +13,8 @@ class merge(processor.processor):
             fieldValue = typecast.getField(self.field,event)
             if type(event) is dict and type(fieldValue) is dict:
                 event.update(fieldValue)
+                try:
+                    del event[self.field]
+                except KeyError:
+                    pass
         return event
