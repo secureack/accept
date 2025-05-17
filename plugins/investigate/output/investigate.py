@@ -155,7 +155,7 @@ class investigate(output.output):
         resultMessage = ""
         failedEvents = []
         response = requests.post(f"{self.url}_bulk",data="\n".join(bulkPayload)+"\n",auth=(self.username,self.password),verify=self.verify,headers={ "Content-Type" : "application/json", "Accept" : "application/json" },timeout=self.timeout)
-        self.logger.debug(f"flush opensearch {response.status_code} {response.elapsed.total_seconds()}")
+        self.logger.log(6,f"flush opensearch",{ "status_code" : response.status_code, "took" : response.elapsed.total_seconds(), "size" : len(response.request.body) })
         if response.status_code == 200:
             resultCode = 0
             responseJSON = json.loads(response.text)
