@@ -7,12 +7,17 @@ class rename(processor.processor):
     def __init__(self,**kwargs):
         self.rename = kwargs.get('rename')
         self.preserve = kwargs.get('preserve',False)
+        self.NoneFields = kwargs.get('none_fields',False)
         super().__init__(**kwargs)
 
     def process(self,event):
         for oldField, newField in self.rename.items():
             if type(newField) is str:
-                event[newField] = typecast.getField(oldField,event)
+                fieldValue = typecast.getField(oldField,event)
+                if fieldValue  or self.NoneFields:
+                    event[newField] = fieldValue
+                else:
+                    continue
                 if not self.preserve:
                     try:
                         del event[oldField]
