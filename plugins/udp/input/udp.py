@@ -1,3 +1,4 @@
+import time
 import socket
 import os
 
@@ -22,14 +23,28 @@ class udp(input.input):
             self.logger.critical(f"critical error {e}")
             os._exit(255)
 
+        responseBuffer = {}
+        nextCheck = time.time() + 60
         while self.running:
-            data = ""
             try:
+                if time.time() > nextCheck:
+                    for address in list(responseBuffer.keys()):
+                        if responseBuffer[address]["last"] < time.time():
+                            del responseBuffer[address]
+                    nextCheck = time.time() + 60
+
                 data, address = self.server.recvfrom(4096)
-                if "\n" in data:
-                    for e in data.split("\n")[:-1]:
+                if address not in responseBuffer:
+                    responseBuffer[address] = { "last" : time/time() + 60, "data" : "" }
+                else:
+                    responseBuffer[address]["last"] = time.time() + 60
+                responseBuffer[address]["data"] += data.decode("utf-8")
+                if "\n" in responseBuffer[address]["data"]:
+                    for e in responseBuffer[address]["data"].split("\n")[:-1]:
                         self.event(e)
-                    data = data.split("\n")[-1]
+                    responseBuffer[address]["data"] = responseBuffer[address]["data"].split("\n")[-1]
+                    if not responseBuffer[address]["data"]:
+                        del responseBuffer[address]
             except Exception as e:
                 self.logger.error(f"connection exception occurred {e}")
 
