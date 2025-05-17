@@ -35,7 +35,7 @@ class udp(input.input):
 
                 data, address = self.server.recvfrom(4096)
                 if address not in responseBuffer:
-                    responseBuffer[address] = { "last" : time/time() + 60, "data" : "" }
+                    responseBuffer[address] = { "last" : time.time() + 60, "data" : "" }
                 else:
                     responseBuffer[address]["last"] = time.time() + 60
                 responseBuffer[address]["data"] += data.decode("utf-8")
