@@ -1,78 +1,104 @@
 import re
 import logging
-import operator
 
 from core import globalSettings, functions, typecast
 
 logger = logging.getLogger(__name__)
 logger.setLevel(globalSettings.args.log_level)
 
-OPERATORS = {
-    "==": operator.eq,
-    "!=": operator.ne,
-    ">": operator.gt,
-    ">=": operator.ge,
-    "<": operator.lt,
-    "<=": operator.le,
-    "in": lambda x, y: x in y,
-    "not in": lambda x, y: x not in y,
-    "match": lambda x, y: bool(re.fullmatch(y, x)),
-    "not match": lambda x, y: not bool(re.fullmatch(y, x)),
-}
+complied = {}
 
-def evaluateAnd(andStatement, dicts=None):
-    operationList = []
-    for statement in andStatement:
-        if isinstance(statement, dict):
-            operationList.append(statement)
-        else:
-            if not logicProcess(typecast.typeCast(statement[0], dicts), statement[1], typecast.typeCast(statement[2], dicts)):
-                return False
-    for operation in operationList:
-        if "and" in operation:
-            if not evaluateAnd(operation["and"], dicts):
-                return False
-        elif "or" in operation:
-            if not evaluateOr(operation["or"], dicts):
-                return False
-    return True
+class typeCastType():
+    def __init__(self,varString):
+        self.varString = varString
 
-def evaluateOr(orStatement, dicts=None):
-    operationList = []
-    for statement in orStatement:
-        if type(statement) is dict:
-            operationList.append(statement)
+    def get(self,dicts=None):
+        return typecast.dynamic(self.varString,dicts,functionSafeList=functions.available)
+
+regexLogicString = re.compile(r'((\"(.*?\\\\\"|(.*?[^\\])\")|([a-zA-Z0-9]+(\[(.*?)\])+)|(%%(.*?)%%)|([a-zA-Z0-9]+(\((.*?)(\)\)|\)))+)|\[(.*?)\]|([a-zA-Z0-9\.\-]*)))\s?( not match | match | not in | in |==|!=|>=|>|<=|<)\s?((\"(.*?\\\\\"|(.*?[^\\])\")|(%%(.*?)%%)|([a-zA-Z0-9]+(\[(.*?)\])+)|([a-zA-Z0-9]+(\((.*?)(\)\)|\))(|$))+)|\[(.*?)\]|([a-zA-Z0-9\.\-]*)))',re.DOTALL)
+regexLogicSafeValidationString = re.compile(r'^(True|False|\(|\)| |or|and|not)*$')
+
+def ifEval(logicString,dicts=None):
+    if "if " == logicString[:3]:
+        tempLogic = logicString[3:]
+        # statement = None
+        logicMatches = regexLogicString.finditer(tempLogic)
+        for index, logicMatch in enumerate(logicMatches, start=1):
+            statement = [logicMatch.group(1).strip(),logicMatch.group(17).strip(),logicMatch.group(16).strip()]
+            # Cast typing statement vars
+            for x in range(0,2):
+                statement[x] = typecast.typeCast(statement[x],dicts,functions.available)
+            tempLogic = tempLogic.replace(logicMatch.group(0),str(logicProcess(statement)))
+        # Checking that result only includes True, False, ( ), or, and,
+        if regexLogicSafeValidationString.search(tempLogic):
+            result = eval(tempLogic) # Can be an unsafe call be very careful with this!
+            return result
         else:
-            if logicProcess(typecast.typeCast(statement[0], dicts), statement[1], typecast.typeCast(statement[2], dicts)):
-                return True
-    for operation in operationList:
-        if "and" in operation:
-            if evaluateAnd(operation["and"], dicts):
-                return True
-        elif "or" in operation:
-            if evaluateOr(operation["or"], dicts):
-                return True
+            logger.log(50,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
 
-def ifEval(logic, dicts=None):
-    if type(logic) is dict:
-        for logicSection in logic["logic"]:
-            if type(logicSection) is list:
-                if not logicProcess(typecast.typeCast(logicSection[0], dicts), logicSection[1], typecast.typeCast(logicSection[2], dicts)):
-                    return False
-            else:
-                if "and" in logicSection:
-                    if not evaluateAnd(logicSection["and"], dicts):
-                        return False
-                if "or" in logicSection:
-                    if not evaluateOr(logicSection["or"], dicts):
-                        return False
-        return True
+def compileIf(logicString):
+    statements = []
+    if "if " == logicString[:3]:
+        # statement = None
+        logicMatches = regexLogicString.finditer(logicString[3:])
+        for index, logicMatch in enumerate(logicMatches, start=1):
+            statement = [logicMatch.group(1).strip(),logicMatch.group(17).strip(),logicMatch.group(16).strip()]
+            # Cast typing statement vars
+            for x in range(0,2):
+                statement[x] = typecast.simple(statement[x])
+                if typecast.regexDict.match(statement[x]) or typecast.regexFunction.match(statement[x]):
+                    statement[x] = typeCastType(statement[x])
+            if statement[2] == "match" or statement[2] == "not match":
+                if statement[1] not in complied:
+                    complied[statement[1]] = re.compile(statement[1])
+            statements.append([logicMatch.group(0),statement])
+    return statements
+
+def compliedEval(logicString,statements,dicts=None):
+    if "if " == logicString[:3]:
+        tempLogic = logicString[3:]
+        for statement in statements:
+            newStatement = [None,None,statement[1][2]]
+            for x in range(0,2):
+                newStatement[x] = statement[1][x] if type(statement[1][x]) is not typeCastType else statement[1][x].get(dicts)
+            tempLogic = tempLogic.replace(statement[0],str(logicProcess(newStatement)))
+        if regexLogicSafeValidationString.search(tempLogic):
+            result = eval(tempLogic) # Can be an unsafe call be very careful with this!
+            return result
+        else:
+            logger.log(50,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
 
-def logicProcess(value1, operator, value2):
+def logicProcess(statement):
     try:
-        return OPERATORS[operator](value1, value2)
+        if statement[2] == "==":
+            return (statement[0] == statement[1])
+        elif statement[2] == "!=":
+            return (statement[0] != statement[1])
+        elif statement[2] == ">":
+            return (statement[0] > statement[1])
+        elif statement[2] == ">=":
+            return (statement[0] >= statement[1])
+        elif statement[2] == "<":
+            return (statement[0] < statement[1])
+        elif statement[2] == "<=":
+            return (statement[0] <= statement[1])
+        elif statement[2] == "in":
+            return (statement[0] in statement[1])
+        elif statement[2] == "not in":
+            return (statement[0] not in statement[1])
+        elif statement[2] == "match":
+            if complied[statement[1]].search(statement[0]):
+                return True
+            else:
+                return False
+        elif statement[2] == "not match":
+            if complied[statement[1]].search(statement[0]):
+                return False
+            else:
+                return True
+        else:
+            return False
     except:
-        print("Logic processing failed {}".format({ "statement" : (value1, value2, operator) }))
         return False
