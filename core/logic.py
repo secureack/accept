@@ -20,13 +20,6 @@ OPERATORS = {
     "not match": lambda x, y: not bool(re.fullmatch(y, x)),
 }
 
-class typecastType():
-    def __init__(self,varString):
-        self.varString = varString
-
-    def get(self,dicts=None):
-        return typecast.dynamic(self.varString,dicts,functionSafeList=functions.available)
-
 def evaluateAnd(andStatement, dicts=None):
     operationList = []
     for statement in andStatement:
