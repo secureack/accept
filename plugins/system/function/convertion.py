@@ -1,5 +1,5 @@
 import json
-from core import typecast
+from plugins.system.core import logic as coreLogic
 
 def getType(x):
     return type(x).__name__
@@ -67,4 +67,4 @@ def decode(obj,*args):
     return obj.decode(*args)
 
 def typeCast(value):
-    return typeCast(value)
+    return coreLogic.typeCast(value)
