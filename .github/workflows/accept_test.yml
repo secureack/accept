@@ -21,6 +21,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest
         pip install -r requirements.txt
+        for file in plugins/*; do
+          pip3 install -r "$file/requirements.txt"
+        done
     - name: Test
       run: |
         pytest
