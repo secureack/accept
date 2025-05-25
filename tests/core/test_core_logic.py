@@ -20,6 +20,7 @@ def test_if_eval_basic():
     assert core.logic.ifEval("if \"test\" not in \"abc\"") is True
     assert core.logic.ifEval("if \"test\" in \"test\"") is True
     assert core.logic.ifEval("if test match \".*\"") is True
+    core.logic.complied = {}
     assert core.logic.ifEval("if test not match \".*\"") is False
 
 def test_if_eval_eventData():
