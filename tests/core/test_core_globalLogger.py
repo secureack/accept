@@ -32,7 +32,7 @@ def test_logger_emit(capsys):
     assert capturedDict["caller"]["filename"] == "test_core_globalLogger.py"
     assert capturedDict["caller"]["line"] > 0
     assert capturedDict["context"]["pipeline"] == core.globalSettings.args.pipeline
-    assert capturedDict["context"]["cache"] == "None"
+    assert capturedDict["context"]["cache"] == "test"
     assert capturedDict["props"]["ip"] == "1.1.1.1"
     assert "trace" not in capturedDict
 
