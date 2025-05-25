@@ -20,6 +20,18 @@ def test_typecast_dynamic():
 		return "testFunction"
 	core.functions.available["testFunction"] = testFunction
 	assert core.typecast.dynamic("testFunction()") == "testFunction"
+	def testFunctionArg(a,b=False):
+		if int(a) == 1 and b == True:
+			return True
+		return False
+	core.functions.available["testFunctionArg"] = testFunctionArg
+	assert core.typecast.dynamic("testFunctionArg(1)") == False
+	assert core.typecast.dynamic("testFunctionArg(1,True)") == True
+	assert core.typecast.dynamic("testFunctionArg(\"1\",True)") == True
+	def testFunctionSum(a):
+		return a + 1
+	core.functions.available["testFunctionSum"] = testFunctionSum
+	assert core.typecast.dynamic("testFunctionSum(testFunctionSum(1))") == 3
 
 def test_typecast_flatten():
 	assert core.typecast.flatten({ "test" : { "test1" : { "test2" : 123 } } }) == {	"test.test1.test2": 123 }
