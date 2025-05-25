@@ -89,11 +89,15 @@ def logicProcess(statement):
         elif statement[2] == "not in":
             return (statement[0] not in statement[1])
         elif statement[2] == "match":
+            if statement[1] not in complied:
+                complied[statement[1]] = re.compile(statement[1])
             if complied[statement[1]].search(statement[0]):
                 return True
             else:
                 return False
         elif statement[2] == "not match":
+            if statement[1] not in complied:
+                complied[statement[1]] = re.compile(statement[1])
             if complied[statement[1]].search(statement[0]):
                 return False
             else:
