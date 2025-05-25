@@ -22,7 +22,9 @@ jobs:
         pip install pytest
         pip install -r requirements.txt
         for file in plugins/*; do
-          pip3 install -r "$file/requirements.txt"
+            if [ -f "$file/requirements.txt" ]; then
+              pip3 install -r "$file/requirements.txt"
+            fi
         done
     - name: Test
       run: |
