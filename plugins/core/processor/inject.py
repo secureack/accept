@@ -19,6 +19,14 @@ class inject(processor.processor):
                     elif "default" in item:
                         event[field] = item["default"]
                         break
+            elif isinstance(value, dict):
+                for k, v in value.items():
+                    if k.startswith("if ") and logic.ifEval(k, { "data" : { "event" : event } }):
+                        event[field] = v
+                        break
+                    elif k == "default":
+                        event[field] = v
+                        break
             else:
                 event[field] = value
         return event

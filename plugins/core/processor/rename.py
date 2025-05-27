@@ -31,7 +31,18 @@ class rename(processor.processor):
                             if not self.preserve:
                                 del event[oldField]
                             break
-                    elif "default" in item:
+                    else:
+                        for k, v in item.items():
+                            match = False
+                            if k.startswith("if ") and logic.ifEval(k, { "data" : { "event" : event } }):
+                                event[newField[0]] = v
+                                if not self.preserve:
+                                    del event[oldField]
+                                match = True
+                                break
+                        if match:
+                            break
+                    if "default" in item:
                         event[newField[0]] = item["default"]
                         if not self.preserve:
                             try:
