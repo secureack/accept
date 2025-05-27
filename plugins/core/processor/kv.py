@@ -22,7 +22,7 @@ class kv(processor.processor):
                 key = match.group('key').strip('"\'')
                 value = match.group('value').strip('"\'')
                 if self.typecast:
-                    value = typecast.typecast(value)
+                    value = typecast.typeCast(value)
                 kvEvent[key] = value
         else:
             kvPairs = event.split(self.spaced)
@@ -30,7 +30,7 @@ class kv(processor.processor):
                 kv = kvPair.split(self.separator)
                 if len(kv) == 2:
                     if self.typecast:
-                        kvEvent[kv[0]] = typecast.typecast(kv[1])
+                        kvEvent[kv[0]] = typecast.typeCast(kv[1])
                     else:
                         kvEvent[kv[0]] = kv[1]
         return kvEvent
