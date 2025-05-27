@@ -2,7 +2,7 @@ import time
 
 from classes import processor
 
-from plugins.system.core import logic as coreLogic
+from core import logic
 
 class rule(processor.processor):
     nextBehavior = 1
@@ -17,14 +17,13 @@ class rule(processor.processor):
                 if nextRule := kwargs.get(f"next{x}"):
                     self.rules.append(v)
                     self.next.append(nextRule)
-                    self.statements.append(coreLogic.complieIf(v))
         self.next.reverse()
         super().__init__(**kwargs)
 
     def processHandler(self,event,stack=[]):
         eventStartTime = time.perf_counter_ns()
         for index, rule in enumerate(self.rules):
-            if rule and coreLogic.compliedEval(rule,self.statements[index],{ "data" : { "event" : event } }):
+            if rule and logic.ifEval(rule,{ "data" : { "event" : event } }):
                 self.updateProcessStats(eventStartTime)
                 try:
                     self.next[index].processHandler(event,stack)

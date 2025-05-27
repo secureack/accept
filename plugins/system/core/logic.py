@@ -15,7 +15,6 @@ regexDictOpen = re.compile(r"^([a-zA-Z0-9]+)\[.*")
 regexFunctionKwarg = re.compile(r"^([a-zA-Z0-9_]+)=(.*)")
 regexFunction = re.compile(r"^([a-zA-Z0-9_]+)\([\S\s]*\)")
 regexFunctionOpen = re.compile(r"(^|[a-zA-Z0-9_]+=)([a-zA-Z0-9_]*)\(.*")
-regexCommor = re.compile(r",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")
 regexInt = re.compile(r"^(-|)[0-9]+$")
 regexFloat = re.compile(r"^(-|)[0-9]+\.[0-9]+$")
 regexString = re.compile(r"^\".*\"$")
@@ -432,22 +431,6 @@ def ifEval(logicString,dicts=None):
         else:
             logger.log(50,"Unsafe logic eval",{ "tempLogic" : tempLogic },extra={ "source" : "logic", "type" : "unsafe" })
     return False
-
-def complieIf(logicString):
-    statements = []
-    if "if " == logicString[:3]:
-        # statement = None
-        logicMatches = regexLogicString.finditer(logicString[3:])
-        for index, logicMatch in enumerate(logicMatches, start=1):
-            statement = [logicMatch.group(1).strip(),logicMatch.group(17).strip(),logicMatch.group(16).strip()]
-            # Cast typing statement vars
-            for x in range(0,2):
-                statement[x] = preTypeCast(statement[x])
-            if statement[2] == "match" or statement[2] == "not match":
-                if statement[1] not in complied:
-                    complied[statement[1]] = re.compile(statement[1])
-            statements.append([logicMatch.group(0),statement])
-    return statements
 
 def compliedEval(logicString,statements,dicts=None):
     if "if " == logicString[:3]:
