@@ -2,17 +2,6 @@ import sys
 import os
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-
-@pytest.fixture(autouse=True)
-def set_cwd(tmp_path, request):
-    orig_cwd = os.getcwd()
-    if orig_cwd == "/workspace":
-        os.chdir("/workspace/accept")
-    yield
-    os.chdir(orig_cwd)
-
 import core.globalSettings
 
 class args:
