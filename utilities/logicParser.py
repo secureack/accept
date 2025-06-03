@@ -30,7 +30,6 @@ def parse(inputString):
                 currentIndex += 1  # skip unknown character
 
     def nestLogic(tokenList):
-        stack = []
         currentGroup = []
         currentOperator = None
         tokenIndex = 0
@@ -61,7 +60,7 @@ def parse(inputString):
         elif len(currentGroup) == 1:
             return currentGroup[0]
         else:
-            return currentGroup
+            raise ValueError("Invalid logic structure")
 
     nestedLogic = nestLogic(logicTokens)
     return {"logic": [nestedLogic]}
