@@ -1,8 +1,8 @@
-name: Accept Test
-# This workflow runs tests on succesful pull requests to the main branch.
+name: Accept Test (PRs Only)
+# This workflow runs tests on pull requests to the main branch.
 
 on:
-  push:
+  pull_request:
     branches: [ "main" ]
 
 permissions:
