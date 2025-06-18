@@ -8,7 +8,6 @@ EMPTY_RESPONSE = {
 }
 
 class httpWebHook(input.input):
-
     def __init__(self,**kwargs):
         self.bindAddress = kwargs.get("bind_address","127.0.0.1")
         self.bindPort = kwargs.get("bind_port",5656)
@@ -72,14 +71,15 @@ class httpWebHook(input.input):
                         events = json.loads(body)
                         if type(events) == list:
                             for event in events:
-                                self.event(event)
+                                self.event(json.dumps(event))
                         else:
-                            self.event(events)
+                            self.event(json.dumps(events))
                     except:
                         pass
-                events = body.split('\n')
-                for event in events:
-                    self.event(event)
+                else:
+                    events = body.split('\n')
+                    for event in events:
+                        self.event(event)
                 await send(self.generateHeaders(200))
                 await send(EMPTY_RESPONSE)
                 return
